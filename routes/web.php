@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Login;
 use App\Http\Controllers\Registrate;
+use App\Http\Controllers\ImageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,3 +27,5 @@ Route::post('/registrate', [Registrate::class, 'registrate']);
 Route::get('/login', [Login::class, 'login']);
 
 Route::post('/login', [Login::class, 'getLogin']);
+
+Route::get('/image', [ImageController::class, 'imageDraw']);

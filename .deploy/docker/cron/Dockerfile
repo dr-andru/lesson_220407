@@ -2,25 +2,11 @@ FROM php:7.4-fpm
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y git unzip libpng-dev
+RUN apt-get update && apt-get install -y git unzip
 
 RUN groupadd --gid 1000 docker
 
 RUN useradd --gid 1000 --uid 1000 docker
-
-RUN apt-get update && apt-get install -y libpng-dev
-
-
-RUN apt-get install -y \
-    libwebp-dev \
-    libjpeg62-turbo-dev \
-    libpng-dev libxpm-dev \
-    libfreetype6-dev
-
-RUN docker-php-ext-configure gd \
-     --with-freetype
-
-RUN docker-php-ext-install gd
 
 ###################### COMPOSER #######################
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
@@ -35,8 +21,20 @@ RUN apt-get update && \
     apt-get install -y libpq-dev && \
     docker-php-ext-install pdo pdo_pgsql pgsql
 
+###################### CRON #######################
+ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.1.9/supercronic-linux-amd64 \
+    SUPERCRONIC=supercronic-linux-amd64 \
+    SUPERCRONIC_SHA1SUM=5ddf8ea26b56d4a7ff6faecdd8966610d5cb9d85
+RUN curl -fsSLO "$SUPERCRONIC_URL" \
+ && echo "${SUPERCRONIC_SHA1SUM}  ${SUPERCRONIC}" | sha1sum -c - \
+ && chmod +x "$SUPERCRONIC" \
+ && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
+ && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
 
-COPY .deploy/docker/backend/entrypoint.sh /entrypoint-component.sh
+ ADD .crontab /etc/crontab
+######################################################
+
+COPY .deploy/docker/cron/entrypoint.sh /entrypoint-component.sh
 
 USER docker:docker
 
