@@ -46,4 +46,9 @@ class User extends Authenticatable
     {
         return hash('sha256', $password);
     }
+
+    public function role()
+    {
+       return $this->hasOne(Role::class, 'id', 'role_id');
+    }
 }

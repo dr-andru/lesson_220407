@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Login;
 use App\Http\Controllers\Registrate;
 use App\Http\Controllers\ImageController;
+use App\Http\Controllers\TestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,3 +30,11 @@ Route::get('/login', [Login::class, 'login']);
 Route::post('/login', [Login::class, 'getLogin']);
 
 Route::get('/image', [ImageController::class, 'imageDraw']);
+
+
+
+Route::get('/test', [TestController::class, 'testFiles']);
+Route::post('/test', [TestController::class, 'upload']);
+
+
+Route::get('/testModel', [TestController::class, 'testModel']);

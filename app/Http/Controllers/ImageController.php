@@ -2,57 +2,82 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
+use App\ImageTransformers\ImageFill;
+use App\ImageTransformers\DrawLine;
+use App\ImageTransformers\AddBlur;
+use App\ImageTransformers\AddText;
+use App\ImageTransformers\AddImage;
+use App\ImageTransformers\TransformerInterface;
 
 class ImageController extends Controller
 {
+    /**
+    * @var TransformerInterface[]
+    */
+    private $mutateList = [];
+
+    public function __construct()
+    {
+      $this->mutateList = [
+        new ImageFill(),
+        new DrawLine([
+          'r' => 0,
+          'g' => 0,
+          'b' => 0,
+        ],
+          [
+            'x1' => 0,
+            'y1' => 568 / 3,
+            'x2' => 1024,
+            'y2' => 568 / 3 * 2
+          ]
+      ),
+        new AddBlur(),
+        new AddBlur(),
+        new AddBlur(),
+        new AddBlur(),
+        new AddBlur(),
+        new DrawLine([
+          'r' => 0,
+          'g' => 255,
+          'b' => 0,
+        ],
+          [
+            'x1' => 0,
+            'y1' => 100,
+            'x2' => 1024,
+            'y2' => 100
+          ]
+      ),
+        new AddText(),
+        new AddImage(),
+      ];
+    }
+
     public function imageDraw()
     {
-      $image = imagecreatetruecolor(1024, 568);
+      $user=User::find(1);
+      dd($user->role->users);
+      $image = $this->createImage(1024, 568);
 
-      $green = imagecolorallocate($image, 50, 255, 50);
+      foreach ($this->mutateList as $value) {
+        $value->transform($image);
+      }
 
-      imagefill($image, 1, 1, $green);
+      $imageContent = $this->getImageContent($image);
 
-      $black = imagecolorallocate($image, 0, 0, 0);
+      return $this->getResponse($imageContent);
+    }
 
-      imageline($image, 0, 568 / 3, 1024, 568 / 3 * 2, $black);
+    private function createImage($width, $height)
+    {
+      return imagecreatetruecolor($width, $height);
+    }
 
-      $white = imagecolorallocate($image, 255, 255, 255);
-
-
-            imagefilter($image, IMG_FILTER_GAUSSIAN_BLUR);
-            imagefilter($image, IMG_FILTER_GAUSSIAN_BLUR);
-            imagefilter($image, IMG_FILTER_GAUSSIAN_BLUR);
-            imagefilter($image, IMG_FILTER_GAUSSIAN_BLUR);
-            imagefilter($image, IMG_FILTER_GAUSSIAN_BLUR);
-
-      imagettftext(
-          $image,
-          40,
-          0,
-          100, 100,
-          $white,
-          '/app/storage/fonts/Game Of Squids.ttf',
-          'A lot of text'
-      );
-
-      $auto = imagecreatefrompng('/app/storage/auto.png');
-
-      $autoX = imagesx ($auto);
-      $autoY = imagesy ($auto);
-
-      imagecopyresized(
-        $image,
-        $auto,
-        1024 / 2, 568 / 2,
-        0, 0,
-        1024 / 2, 568 / 2,
-        $autoX,
-        $autoY
-      );
-      //imagepng($image, '/app/storage/test.png');
-
+    private function getImageContent($image)
+    {
       ob_start();
 
       imagepng($image);
@@ -61,6 +86,11 @@ class ImageController extends Controller
 
       ob_end_clean();
 
+      return $imageContent;
+    }
+
+    private function getResponse($imageContent)
+    {
       return response($imageContent)
         ->header('Content-Type', 'image/png');
     }
